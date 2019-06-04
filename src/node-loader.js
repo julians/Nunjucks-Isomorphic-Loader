@@ -51,9 +51,28 @@ module.exports = function(source) {
 
 	var njkSlimPath = require.resolve('nunjucks/browser/nunjucks-slim');
 	var nunjucksSlim = utils.stringifyRequest(this, '!' + njkSlimPath);
-	this.addDependency(njkSlimPath);
+    this.addDependency(njkSlimPath);
+    
+    let jinjaCompatSetup = "";
+    if ( opt.jinjaCompat ) {
+        nunjucks.installJinjaCompat();
+        jinjaCompatSetup = 'nunjucks.installJinjaCompat();';
+    }
 
-	var env = new nunjucks.Environment(new fsLoader(paths, this.addDependency));
+    var env = new nunjucks.Environment(new fsLoader(paths, this.addDependency));
+    
+    // filters have to be added in the returned module,
+    // so we have to actually save to source code string :(
+    let customFilterSetup = '';
+    if ( opt.filters ) {
+        Object.keys(opt.filters).forEach((key) => {
+        env.addFilter(key, opt.filters[key]);
+
+        customFilterSetup += `
+            env.addFilter("${key}", ${opt.filters[key].toString()});
+        `;
+        });
+    }
 
 	var name = path.relative(rootPath, this.resourcePath);
 
@@ -61,7 +80,7 @@ module.exports = function(source) {
 
 	var precompiledTemplates = nunjucks.precompile(rootPath, {
 		env: env,
-		include: [/.*\.(njk|nunjucks|html|tpl|tmpl)$/]
+		include: opt.includeTemplates || [/.*\.(njk|nunjucks|html|tpl|tmpl)$/],
 	});
 
   	return `// Return function to HtmlWebpackPlugin
@@ -73,9 +92,12 @@ module.exports = function(source) {
 		// Create fake window object to store nunjucks precompiled templates
 		global.window = {};
 
-		${precompiledTemplates}
+        ${precompiledTemplates}
 
-		var env = new nunjucks.Environment(new nunjucks.PrecompiledLoader());
+        ${jinjaCompatSetup}
+
+        var env = new nunjucks.Environment(new nunjucks.PrecompiledLoader());
+        ${customFilterSetup}
 
 		var context = JSON.parse('${context}');
 

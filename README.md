@@ -74,6 +74,21 @@ plugins: [
 ]
 ```
 
+## Options
+
+```
+// include specific templates
+includeTemplates: [/.*\.(njk|nunjucks|html|tpl|tmpl)$/],
+// enable jinja compatibility
+jinjaCompat: true,
+// add custom filters
+filters: {
+  obj_debug: function(variable) {
+    return JSON.stringify(variable, null, 2);
+  },
+},
+```
+
 Accessing data from the templates with the above config of `html-webpack-plugin`
 
 `path/to/template.njk` :
