@@ -81,7 +81,11 @@ module.exports = function(source) {
 	var precompiledTemplates = nunjucks.precompile(rootPath, {
 		env: env,
 		include: opt.includeTemplates || [/.*\.(njk|nunjucks|html|tpl|tmpl)$/],
-	});
+  });
+  
+  precompiledTemplates = precompiledTemplates.replace(/output \+= runtime\.suppressValue\(\(lineno = \d+?, colno = \d+?, runtime\.callWrap\(runtime\.contextOrFrameLookup\(context, frame, "require"\), "require", context, \["(.+?)"\]\)\), env\.opts\.autoescape\);/g, function (match, p1) {
+    return `output += require('${p1}');`;
+  })
 
   	return `// Return function to HtmlWebpackPlugin
 		// Allows Data var to be passed to templates

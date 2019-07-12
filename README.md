@@ -74,6 +74,14 @@ plugins: [
 ]
 ```
 
+## Requiring assets in templates
+
+Uses regular Webpack loaders to load the required file, so you have to have them configured in your Webpack config.
+
+```
+{{ require("src/assets/whatever.jpg") }}
+```
+
 ## Options
 
 ```
@@ -118,4 +126,3 @@ Accessing data from the templates with the above config of `html-webpack-plugin`
     {% endblock %}
   </body>
 </html>
-
